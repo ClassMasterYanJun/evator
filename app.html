@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Эвотор - Ручная загрузка</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+        
+        option {
+            white-space: normal;
+            word-wrap: break-word;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .load-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .load-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .upload-btn {
+            background-color: #008CBA;
+            color: white;
+        }
+        
+        .upload-btn:hover {
+            background-color: #007B9A;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+        
+        .status.success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            display: block;
+        }
+        
+        .status.error {
+            background-color: #f2dede;
+            color: #a94442;
+            display: block;
+        }
+        
+        /* Адаптивный дизайн для мобильных устройств */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+        
+        .period-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .period-group .form-group {
+            flex: 1;
+        }
+        
+        @media (max-width: 600px) {
+            .period-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Эвотор - Ручная загрузка</h1>
+        
+        <div class="form-group">
+            <label for="kkm">Выберете кассу:</label>
+            <select id="kkm">
+                <option value="">Загрузка данных...</option>
+            </select>
+        </div>
+        
+        <div class="period-group">
+            <div class="form-group">
+                <label for="startDate">Дата начала:</label>
+                <input type="date" id="startDate">
+            </div>
+            
+            <div class="form-group">
+                <label for="endDate">Дата окончания:</label>
+                <input type="date" id="endDate">
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button class="load-btn" id="loadDataBtn">Загрузить данные о товарах</button>
+            <button class="upload-btn" id="uploadDataBtn">Выгрузить документы продажи</button>
+        </div>
+        
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        // Встроенные данные из JSON файла
+        const kkmData = [
+  {
+    "Организация": "ИП Тимофеева (Уссурийск)",
+    "Наименование": "скл_14.2_ГРАСП_Уссур",
+    "Касса ККМ": "Эвотор/скл_14.2_ГРАСП_Уссур/Тимофеева С.В. ИП (Уссурийск)"
+  },
+  {
+    "Организация": "ИП Масеева (Комсомольск)",
+    "Наименование": "скл_36.22_Комсомольск",
+    "Касса ККМ": "Эвотор/скл_36.22_Комсомольск/Масеева В. В. ИП (Комсомольск)"
+  },
+  {
+    "Организация": "ИП Тимофеева (Находка)",
+    "Наименование": "скл_16.2_рынок Мега_Находка",
+    "Касса ККМ": "Эвотор/скл_16.2_рынок Мега_Находка/Тимофеева С.В. ИП (Находка)"
+  },
+  {
+    "Организация": "ИП Поздняков (Камчатка)",
+    "Наименование": "скл_33.2_9 км_Камчатка",
+    "Касса ККМ": "Эвотор/скл_33.2_9 км_Камчатка/Поздняков Д. П. ИП (Камчатка)"
+  },
+  {
+    "Организация": "ИП Поздняков (Камчатка)",
+    "Наименование": "скл_33.8_Камчатка_Вулканная59",
+    "Касса ККМ": "Эвотор/скл_33.8_рынок Глобус/Поздняков Д. П. ИП (Камчатка)"
+  },
+  {
+    "Организация": "ИП Тимофеева (Находка)",
+    "Наименование": "Находка_41.16.1",
+    "Касса ККМ": "Эвотор/скл_16.1_Находка/Тимофеева С.В. ИП"
+  },
+  {
+    "Организация": "ИП Масеева (Комсомольск)",
+    "Наименование": "скл_41.1_Благовещенск",
+    "Касса ККМ": "Эвотор/скл_41.1_Благовещенск/Масеева В. В. ИП"
+  },
+  {
+    "Организация": "ИП Поздняков 2 (Камчатка)",
+    "Наименование": "скл_33.7_рынок КП_Камчатка",
+    "Касса ККМ": "Эвотор/скл_33.7_рынок КП_Камчатка/Поздняков Д.П. ИП (Камчатка)"
+  },
+  {
+    "Организация": "ИП Поздняков 2 (Камчатка)",
+    "Наименование": "скл_33.9_рынок 6 км",
+    "Касса ККМ": "Эвотор/скл_33.9_рынок 6 км/Поздняков Д.П. ИП (Камчатка)"
+  },
+  {
+    "Организация": "ИП Масеева (Комсомольск)",
+    "Наименование": "скл_32.4_Хабаровск",
+    "Касса ККМ": "Эвотор/скл_32.4_Хабаровск/Масеева В. В. ИП"
+  },
+  {
+    "Организация": "ИП Масеева (Комсомольск)",
+    "Наименование": "скл_32.1_Хабаровск",
+    "Касса ККМ": "Эвотор/скл_32.1_Хабаровск/Масеева В. В. ИП"
+  },
+  {
+    "Организация": "ИП Масеева (Комсомольск)",
+    "Наименование": "скл_36.33_Комсомольск",
+    "Касса ККМ": "Эвотор/скл_36.33_Комсомольск/Масеева В. В. ИП"
+  },
+  {
+    "Организация": "ИП Тимофеева (Уссурийск)",
+    "Наименование": "скл_14_3_рынок",
+    "Касса ККМ": "Эвотор/скл_14_3_рынок/Тимофеева С.В. ИП (Уссурийск)"
+  },
+  {
+    "Организация": "ТД Традиции",
+    "Наименование": "Скл_32.2_Хабаровск",
+    "Касса ККМ": "Эвотор/скл_32.2_Хабаровск/ТД Традиции"
+  },
+  {
+    "Организация": "ИП Михеева",
+    "Наименование": "скл_25_Бородинская",
+    "Касса ККМ": "Эвотор/скл_25_Бородинская/Михеева О.Ю. ИП"
+  },
+  {
+    "Организация": "ИП Михеева",
+    "Наименование": "скл_21_Владснаб",
+    "Касса ККМ": "Эвотор/скл_21_Владснаб/Михеева О.Ю. ИП"
+  },
+  {
+    "Организация": "ИП Михеева",
+    "Наименование": "скл_27_Нейбута",
+    "Касса ККМ": "Эвотор/скл_27_Нейбута/Михеева О.Ю. ИП"
+  },
+  {
+    "Организация": "ИП Поздняков 3 (Камчатка)",
+    "Наименование": "скл_33.3_30 км_Камчатка",
+    "Касса ККМ": "Эвотор/скл_33.3_30 км_Камчатка/Поздняков Д. П. ИП"
+  },
+  {
+    "Организация": "ИП Поздняков 3 (Камчатка)",
+    "Наименование": "скл_33.6_рынок Елизово_Камчатка",
+    "Касса ККМ": "Эвотор/скл_33.6_рынок Елизово_Камчатка/Поздняков Д. П. ИП"
+  },
+  {
+    "Организация": "ИП Поздняков 3 (Камчатка)",
+    "Наименование": "скл_33.1_торговые_Камчатка",
+    "Касса ККМ": "Эвотор/скл_33.1_торговые_Камчатка/Поздняков Д. П. ИП"
+  },
+  {
+    "Организация": "ИП Михеева",
+    "Наименование": "Скл_5_Фадеева",
+    "Касса ККМ": "Эвотор/скл_5_Росбакалея / Михеева О.Ю. ИП (Владивосток)"
+  },
+  {
+    "Организация": "ИП Поздняков 3 (Камчатка)",
+    "Наименование": "скл_33.10_ярмарка_10км",
+    "Касса ККМ": "Эвотор/скл_33.10_ярмарка_10км/Поздняков Д. П. ИП (Камчатка)"
+  }
+];
+        
+        // Функция для загрузки данных о кассах ККМ
+        function loadKKMData() {
+            try {
+                const select = document.getElementById('kkm');
+                select.innerHTML = '';
+                
+                kkmData.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item['Касса ККМ'];
+                    option.textContent = item['Наименование'];
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
+                showStatus('Ошибка загрузки данных о кассах ККМ', 'error');
+            }
+        }
+        
+        // Функция для отображения статуса
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+        }
+        
+        // Функция для получения выбранного периода
+        function getSelectedPeriod() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            return { startDate, endDate };
+        }
+        
+        // Обработчик кнопки "Загрузить данные о товарах"
+        document.getElementById('loadDataBtn').addEventListener('click', () => {
+            const selectedKKM = document.getElementById('kkm').value;
+            const period = getSelectedPeriod();
+            
+            if (!selectedKKM) {
+                showStatus('Пожалуйста, выберите кассу ККМ', 'error');
+                return;
+            }
+            
+            if (!period.startDate || !period.endDate) {
+                showStatus('Пожалуйста, выберите период', 'error');
+                return;
+            }
+            
+            // Здесь будет логика загрузки данных о товарах
+            showStatus(`Загрузка данных о товарах для кассы: ${selectedKKM}`, 'success');
+            console.log('Загрузка данных о товарах для:', selectedKKM, period);
+        });
+        
+        // Обработчик кнопки "Выгрузить документы продажи"
+        document.getElementById('uploadDataBtn').addEventListener('click', () => {
+            const selectedKKM = document.getElementById('kkm').value;
+            const period = getSelectedPeriod();
+            
+            if (!selectedKKM) {
+                showStatus('Пожалуйста, выберите кассу ККМ', 'error');
+                return;
+            }
+            
+            if (!period.startDate || !period.endDate) {
+                showStatus('Пожалуйста, выберите период', 'error');
+                return;
+            }
+            
+            // Здесь будет логика выгрузки документов продажи
+            showStatus(`Выгрузка документов продажи для кассы: ${selectedKKM}`, 'success');
+            console.log('Выгрузка документов продажи для:', selectedKKM, period);
+        });
+        
+        // Установка текущей даты по умолчанию
+        function setDefaultDates() {
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            document.getElementById('startDate').valueAsDate = firstDay;
+            document.getElementById('endDate').valueAsDate = today;
+        }
+        
+        // Инициализация приложения
+        window.addEventListener('DOMContentLoaded', () => {
+            loadKKMData();
+            setDefaultDates();
+        });
+    </script>
+</body>
+</html>
